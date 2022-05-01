@@ -1,0 +1,5 @@
+#! /usr/bin/env bash
+
+cd src && mkdir /usr/share/mouse-swipe && cp config.py swipe_button.py main.py mouse.py virtual_device.py /usr/share/mouse-swipe
+cd ../data && cp mouse-swipe.service /usr/lib/systemd/system && cp -n mouse-swipe.conf /etc
+systemctl enable mouse-swipe.service --now

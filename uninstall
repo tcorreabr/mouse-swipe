@@ -1,0 +1,4 @@
+#! /usr/bin/env bash
+
+systemctl disable mouse-swipe.service --now
+rm -rf /usr/lib/systemd/system/mouse-swipe.service /etc/mouse-swipe.conf /usr/share/mouse-swipe
