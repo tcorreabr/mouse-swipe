@@ -1,6 +1,6 @@
 # mouse-swipe
 
-Swipe gestures support for mouse buttons through [Systemd](https://systemd.io/) service that intercepts and emulates input device events. Only up, down, left and right swipes are supported. You can also configure buttons to emulate vertical and horizontal scroll while they're pressed.
+Swipe gestures support for mouse buttons through [systemd](https://systemd.io/) service that intercepts and emulates input device events. Only up, down, left and right swipes are supported. You can also configure buttons to emulate vertical and horizontal scroll while they're pressed.
 
 Since it operates at [evdev](https://en.wikipedia.org/wiki/Evdev) level, it works on [X11](https://x.org/wiki/) and [Wayland](https://wayland.freedesktop.org/).
 
@@ -14,7 +14,7 @@ The default configuration works fine on [Gnome](https://www.gnome.org/) desktop,
 ## Installation
 
 ```shell
-git clone https://gitlab.com/tcorreabr/mouse-swipe
+git clone https://github.com/tcorreabr/mouse-swipe.git
 sudo mouse-swipe/install
 ```
 
