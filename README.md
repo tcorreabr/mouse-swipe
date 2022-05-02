@@ -6,7 +6,7 @@ Since it operates at [evdev](https://en.wikipedia.org/wiki/Evdev) level, it work
 
 The default configuration works fine on [Gnome](https://www.gnome.org/) desktop, activating the overview and switching workspaces through right mouse button swipes. For integration with other desktops edit the config file (/etc/mouse-swipe.conf) and restart the service (systemctl restart mouse-swipe.service).
 
-## Requirements
+## Dependencies
 
 - [python-systemd](https://github.com/systemd/python-systemd/)
 - [python-evdev](https://github.com/gvalkov/python-evdev)
