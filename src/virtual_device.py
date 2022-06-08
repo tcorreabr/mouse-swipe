@@ -13,7 +13,8 @@ def create_virtual_device():
 
         if ("BTN_RIGHT", 273) in keys:
             mouse = input_device
-        elif ("KEY_LEFTMETA", 125) in keys:
+        
+        if ("KEY_LEFTMETA", 125) in keys:
             keyboard = input_device
 
         if mouse and keyboard:
