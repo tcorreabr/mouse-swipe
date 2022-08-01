@@ -3,7 +3,7 @@ Description=Swipe gestures support for mouse buttons
 After=display-manager.service
 
 [Service]
-ExecStart=python /usr/share/mouse-swipe/main.py
+ExecStart=python /usr/local/share/mouse-swipe/main.py
 RemainAfterExit=no
 Restart=on-failure
 RestartSec=5s
