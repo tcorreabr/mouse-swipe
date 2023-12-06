@@ -16,14 +16,14 @@ The default configuration works fine on [Gnome](https://www.gnome.org/) desktop,
 ```shell
 git clone https://github.com/tcorreabr/mouse-swipe.git
 cd mouse-swipe
-./install
+sudo ./install
 ```
 
 To uninstall:
 
 ```shell
 #from mouse-swipe directory#
-./uninstall
+sudo ./uninstall
 ```
 
 If you have edited the /etc/mouse-swipe.conf file, you might want to make a backup of it before uninstalling.
