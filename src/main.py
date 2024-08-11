@@ -44,6 +44,10 @@ def ungrab_mouses():
 
 def emulate_event(type, code, value):
     virtual_device.write(type, code, value)
+    if (code == ecodes.REL_WHEEL):
+        virtual_device.write(type, ecodes.REL_WHEEL_HI_RES, 120 if value > 0 else -120)
+    if (code == ecodes.REL_HWHEEL):
+        virtual_device.write(type, ecodes.REL_HWHEEL_HI_RES, 120 if value > 0 else -120)
     virtual_device.syn()
 
 def emulate_key_press(keys):
@@ -98,7 +102,7 @@ async def task_handle_mouse_events(mouse):
                         swipe_button.deltaX = 0
                         swipe_button.deltaY = 0
             
-        if should_forward:
+        if should_forward and event.code != ecodes.REL_WHEEL_HI_RES and event.code != ecodes.REL_HWHEEL_HI_RES:
             emulate_event(event.type, event.code, event.value)
 
 async def task_detect_new_devices():
