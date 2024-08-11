@@ -53,34 +53,34 @@ def emulate_event(type, code, value):
 def emulate_key_press(keys):
     for key in keys:
         virtual_device.write(ecodes.EV_KEY, ecodes.ecodes[key], 1)
-        virtual_device.syn()
+    virtual_device.syn()
 
     for key in reversed(keys):
         virtual_device.write(ecodes.EV_KEY, ecodes.ecodes[key], 0)
-        virtual_device.syn()
+    virtual_device.syn()
 
 async def task_handle_mouse_events(mouse):
     async for event in mouse.input_device.async_read_loop():
         should_forward = True
 
-        if event.type == ecodes.EV_REL:
+        if event.type == ecodes.EV_REL and (event.code == ecodes.REL_X or event.code == ecodes.REL_Y):
             for swipe_button in mouse.swipe_buttons:
                 if swipe_button.pressed:
+                    swipe_button.moved = True
+
                     if swipe_button.freeze:
                         should_forward = False
 
                     if event.code == ecodes.REL_X:
                         swipe_button.deltaX += event.value
 
-                        if swipe_button.scroll and abs(swipe_button.deltaX) > 5:
-                            emulate_event(ecodes.EV_REL, ecodes.REL_HWHEEL, 1 if swipe_button.deltaX > 0 else -1)
-                            swipe_button.deltaX = 0
+                        if swipe_button.scroll:
+                            emulate_event(ecodes.EV_REL, ecodes.REL_HWHEEL, 1 if event.value > 0 else -1)
                     else:
                         swipe_button.deltaY += event.value
 
-                        if swipe_button.scroll and abs(swipe_button.deltaY) > 5:
-                            emulate_event(ecodes.EV_REL, ecodes.REL_WHEEL, -1 if swipe_button.deltaY > 0 else 1)
-                            swipe_button.deltaY = 0
+                        if swipe_button.scroll:
+                            emulate_event(ecodes.EV_REL, ecodes.REL_WHEEL, -1 if event.value > 0 else 1)
         elif event.type == ecodes.EV_KEY:
             for swipe_button in mouse.swipe_buttons:
                 if event.code == ecodes.ecodes[swipe_button.button]:
@@ -91,16 +91,17 @@ async def task_handle_mouse_events(mouse):
                     absDeltaY = abs(swipe_button.deltaY)
 
                     if not(swipe_button.pressed):
-                        if absDeltaX < 5 and absDeltaY < 5:
+                        if not(swipe_button.moved):
                             emulate_key_press(swipe_button.click)
                         elif not(swipe_button.scroll):
                             if absDeltaX > absDeltaY:
                                 emulate_key_press(swipe_button.swipe_right if swipe_button.deltaX > 0 else swipe_button.swipe_left)
                             else:
                                 emulate_key_press(swipe_button.swipe_down if swipe_button.deltaY > 0 else swipe_button.swipe_up)
-                            
+
                         swipe_button.deltaX = 0
                         swipe_button.deltaY = 0
+                        swipe_button.moved = False
             
         if should_forward and event.code != ecodes.REL_WHEEL_HI_RES and event.code != ecodes.REL_HWHEEL_HI_RES:
             emulate_event(event.type, event.code, event.value)
