@@ -63,23 +63,32 @@ async def task_handle_mouse_events(mouse):
     async for event in mouse.input_device.async_read_loop():
         should_forward = True
 
-        if event.type == ecodes.EV_REL and (event.code == ecodes.REL_X or event.code == ecodes.REL_Y):
+        # By default, REL_WHEEL and REL_WHEEL_HI_RES are sent together in one sync.
+        # Avoids emulating these two events separately causing duplicated (jumpy) scrolling.
+        # Emulate REL_WHEEL_HI_RES properly on emulate_event instead.
+        if event.code == ecodes.REL_WHEEL_HI_RES or event.code == ecodes.REL_HWHEEL_HI_RES:
+            should_forward = False
+        elif event.type == ecodes.EV_REL: # mouse movement or mouse wheel
             for swipe_button in mouse.swipe_buttons:
                 if swipe_button.pressed:
-                    swipe_button.moved = True
-
                     if swipe_button.freeze:
                         should_forward = False
 
                     if event.code == ecodes.REL_X:
                         swipe_button.deltaX += event.value
 
-                        if swipe_button.scroll:
+                        if abs(swipe_button.deltaX) > 10 and not(swipe_button.moved):
+                            swipe_button.moved = True
+
+                        if swipe_button.scroll and swipe_button.moved:
                             emulate_event(ecodes.EV_REL, ecodes.REL_HWHEEL, 1 if event.value > 0 else -1)
-                    else:
+                    elif event.code == ecodes.REL_Y:
                         swipe_button.deltaY += event.value
 
-                        if swipe_button.scroll:
+                        if abs(swipe_button.deltaY) > 10 and not(swipe_button.moved):
+                            swipe_button.moved = True
+
+                        if swipe_button.scroll and swipe_button.moved:
                             emulate_event(ecodes.EV_REL, ecodes.REL_WHEEL, -1 if event.value > 0 else 1)
         elif event.type == ecodes.EV_KEY:
             for swipe_button in mouse.swipe_buttons:
@@ -87,14 +96,11 @@ async def task_handle_mouse_events(mouse):
                     should_forward = False
                     swipe_button.pressed = event.value
 
-                    absDeltaX = abs(swipe_button.deltaX)
-                    absDeltaY = abs(swipe_button.deltaY)
-
                     if not(swipe_button.pressed):
                         if not(swipe_button.moved):
                             emulate_key_press(swipe_button.click)
                         elif not(swipe_button.scroll):
-                            if absDeltaX > absDeltaY:
+                            if abs(swipe_button.deltaX) > abs(swipe_button.deltaY):
                                 emulate_key_press(swipe_button.swipe_right if swipe_button.deltaX > 0 else swipe_button.swipe_left)
                             else:
                                 emulate_key_press(swipe_button.swipe_down if swipe_button.deltaY > 0 else swipe_button.swipe_up)
@@ -102,8 +108,8 @@ async def task_handle_mouse_events(mouse):
                         swipe_button.deltaX = 0
                         swipe_button.deltaY = 0
                         swipe_button.moved = False
-            
-        if should_forward and event.code != ecodes.REL_WHEEL_HI_RES and event.code != ecodes.REL_HWHEEL_HI_RES:
+
+        if should_forward:
             emulate_event(event.type, event.code, event.value)
 
 async def task_detect_new_devices():
