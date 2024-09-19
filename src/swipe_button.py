@@ -5,6 +5,7 @@ class SwipeButton:
     
     pressed = 0
     deltaX, deltaY = 0, 0
+    delta = 0
 
     def __init__(self, button):
         self.button = button

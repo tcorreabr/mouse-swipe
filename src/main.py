@@ -77,7 +77,7 @@ async def task_handle_mouse_events(mouse):
                     if event.code == ecodes.REL_X:
                         swipe_button.deltaX += event.value
 
-                        if abs(swipe_button.deltaX) > 10 and not(swipe_button.moved):
+                        if abs(swipe_button.deltaX) > swipe_button.delta and not(swipe_button.moved):
                             swipe_button.moved = True
 
                         if swipe_button.scroll and swipe_button.moved:
@@ -85,7 +85,7 @@ async def task_handle_mouse_events(mouse):
                     elif event.code == ecodes.REL_Y:
                         swipe_button.deltaY += event.value
 
-                        if abs(swipe_button.deltaY) > 10 and not(swipe_button.moved):
+                        if abs(swipe_button.deltaY) > swipe_button.delta and not(swipe_button.moved):
                             swipe_button.moved = True
 
                         if swipe_button.scroll and swipe_button.moved:
