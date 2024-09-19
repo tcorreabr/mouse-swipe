@@ -22,6 +22,7 @@ def read_config_file():
         swipe_button.click = click if (len(click) > 0) else [button]
         swipe_button.freeze = config[button].getboolean("freeze", False)
         swipe_button.scroll = config[button].getboolean("scroll", False)
+        swipe_button.delta = abs(config[button].getint("delta", 10))
         if not(swipe_button.scroll):
             swipe_button.swipe_left = _get_array(config[button].get("swipe_left"))
             swipe_button.swipe_right = _get_array(config[button].get("swipe_right"))
