@@ -42,6 +42,15 @@ def ungrab_mouses():
         except:
             pass
 
+def get_button_code(button_name):
+    """Get button code from button name (e.g., 'BTN_MIDDLE' or 'BTN_280')"""
+    if button_name.startswith('BTN_') and button_name[4:].isdigit():
+        # Extract numeric code from BTN_XXX format (e.g., BTN_280 -> 280)
+        return int(button_name[4:])
+    else:
+        # Use ecodes mapping for named buttons
+        return ecodes.ecodes[button_name]
+
 def emulate_event(type, code, value):
     virtual_device.write(type, code, value)
     if (code == ecodes.REL_WHEEL):
@@ -92,7 +101,7 @@ async def task_handle_mouse_events(mouse):
                             emulate_event(ecodes.EV_REL, ecodes.REL_WHEEL, -1 if event.value > 0 else 1)
         elif event.type == ecodes.EV_KEY:
             for swipe_button in mouse.swipe_buttons:
-                if event.code == ecodes.ecodes[swipe_button.button]:
+                if event.code == get_button_code(swipe_button.button):
                     should_forward = False
                     swipe_button.pressed = event.value
 
