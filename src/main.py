@@ -10,10 +10,9 @@ from mouse import Mouse
 def get_mouses():
     logger.info("Searching for mouses..")
 
-    global number_of_devices
-
+    global device_paths
     input_devices = [InputDevice(path) for path in list_devices()]
-    number_of_devices = len(input_devices)
+    device_paths = set(d.path for d in input_devices)
     mouses.clear()
 
     for input_device in input_devices:
@@ -21,25 +20,40 @@ def get_mouses():
             continue
 
         try:
-            keys = input_device.capabilities(verbose=True)[("EV_KEY", 1)]
-        except:
+            capabilities = input_device.capabilities(verbose=True)
+        except Exception:
             continue
 
-        if ("BTN_RIGHT", 273) in keys:
-            logger.info("Mouse found: " + input_device.name)
-            mouse = Mouse(input_device.name)
-            mouse.input_device = input_device
-            mouse.swipe_buttons = copy.deepcopy(config_swipe_buttons)
+        keys = capabilities.get(("EV_KEY", 1), [])
+        rel_axes = capabilities.get(("EV_REL", 2), [])
+
+        if ("BTN_RIGHT", 273) not in keys:
+            continue
+
+        if ("REL_X", 0) not in rel_axes or ("REL_Y", 1) not in rel_axes:
+            logger.info("Skipping " + input_device.name + ": no REL_X/REL_Y axes (not a pointer device)")
+            continue
+
+        logger.info("Mouse found: " + input_device.name)
+        mouse = Mouse(input_device.name)
+        mouse.input_device = input_device
+        mouse.swipe_buttons = copy.deepcopy(config_swipe_buttons)
+
+        try:
             mouse.input_device.grab()
-            mouses.append(mouse)
-            tasks.append(asyncio.create_task(task_handle_mouse_events(mouse)))
+        except Exception as e:
+            logger.warning("Failed to grab " + input_device.name + ": " + str(e))
+            continue
+
+        mouses.append(mouse)
+        tasks.append(asyncio.create_task(task_handle_mouse_events(mouse)))
 
 def ungrab_mouses():
     for mouse in mouses:
         try:
             if mouse.input_device:
                 mouse.input_device.ungrab()
-        except:
+        except Exception:
             pass
 
 def get_button_code(button_name):
@@ -124,31 +138,33 @@ async def task_handle_mouse_events(mouse):
 async def task_detect_new_devices():
     while True:
         await asyncio.sleep(5)
-        if len(list_devices()) > number_of_devices:
+        current_paths = set(list_devices())
+        if current_paths != device_paths:
+            logger.info("Device change detected, restarting..")
             # Cancel this task to trigger the cancelling of all tasks on gather
             tasks[0].cancel()
-  
+
 def cancel_tasks():
     for task in tasks:
         try:
             if not(task.done()) and not(task.cancelled()):
                 task.cancel()
-        except:
+        except Exception:
             pass
 
     for task in tasks:
         try:
             task.result()
-        except:
+        except Exception:
             pass
 
 async def run_tasks():
-    try:            
+    try:
         tasks.clear()
         tasks.append(asyncio.create_task(task_detect_new_devices()))
         get_mouses()
         await asyncio.gather(*tasks)
-    except:
+    except (Exception, asyncio.CancelledError):
         pass
     finally:
         ungrab_mouses()
@@ -156,6 +172,7 @@ async def run_tasks():
 
 if __name__ == "__main__":
     mouses, tasks = [], []
+    device_paths = set()
 
     try:
         logger = logging.getLogger('mouse-swipe')
@@ -164,7 +181,7 @@ if __name__ == "__main__":
     except BaseException as e:
         print(e)
         quit()
-        
+
     try:
         virtual_device = create_virtual_device()
         config_swipe_buttons = read_config_file()
