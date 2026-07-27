@@ -16,7 +16,8 @@ def get_mouses():
     mouses.clear()
 
     for input_device in input_devices:
-        if input_device.name == "mouse-swipe-virtual-device":
+        if input_device.name in ignore_devices:
+            logger.info("Ignoring device: " + input_device.name)
             continue
 
         try:
@@ -172,6 +173,7 @@ async def run_tasks():
 
 if __name__ == "__main__":
     mouses, tasks = [], []
+    ignore_devices = []
     device_paths = set()
 
     try:
@@ -184,7 +186,7 @@ if __name__ == "__main__":
 
     try:
         virtual_device = create_virtual_device()
-        config_swipe_buttons = read_config_file()
+        config_swipe_buttons, ignore_devices = read_config_file()
     except Exception as e:
         logger.info(e)
         quit()
