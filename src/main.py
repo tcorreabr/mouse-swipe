@@ -16,7 +16,8 @@ def get_mouses():
     mouses.clear()
 
     for input_device in input_devices:
-        if input_device.name == "mouse-swipe-virtual-device":
+        if input_device.name in config_ignore_devices:
+            logger.info("Ignoring device: " + input_device.name)
             continue
 
         try:
@@ -147,15 +148,14 @@ async def task_detect_new_devices():
 def cancel_tasks():
     for task in tasks:
         try:
-            if not(task.done()) and not(task.cancelled()):
+            if not task.done() and not task.cancelled():
                 task.cancel()
         except Exception:
             pass
-
     for task in tasks:
         try:
             task.result()
-        except Exception:
+        except (Exception, asyncio.CancelledError):
             pass
 
 async def run_tasks():
@@ -184,7 +184,7 @@ if __name__ == "__main__":
 
     try:
         virtual_device = create_virtual_device()
-        config_swipe_buttons = read_config_file()
+        config_swipe_buttons, config_ignore_devices = read_config_file()
     except Exception as e:
         logger.info(e)
         quit()
